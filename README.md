@@ -10,7 +10,7 @@ Run SFT:
 bash exps/paper_exps/SFT/gsm8k.sh # or svamp, mathqa
 ```
 ### ReFT
-Main script: `train_rl_ppo_v2.py`
+Main script: `train_rl_reft.py`
 
 Run ReFT:
 ```
@@ -18,7 +18,7 @@ bash exps/paper_exps/ReFT/gsm8k.sh # or svamp, mathqa
 ```
 
 ### Online-SL
-Main script: `train_rl_sl_v2.py`
+Main script: `train_rl_sl.py`
 
 Run Online-SL:
 ```
