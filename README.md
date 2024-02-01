@@ -62,10 +62,10 @@ bash exps/paper_exps/Rerank/gsm8k.sh # or gsm8k_reft
 ## Checkpoints
 We provide checkpoints for Codellama model after Reinforced Finetuned on GSM8k and the corresponding Rerank model at: [Codellama-7b-hf-ReFT-GSM8k](https://huggingface.co/lqtrung1998/Codellama-7b-hf-ReFT-GSM8k) and [Codellama-7b-hf-ReFT-Rerank-GSM8k](https://huggingface.co/lqtrung1998/Codellama-7b-hf-ReFT-Rerank-GSM8k)
 
-Note: Our models are tuned based on Codellama, thus, licenses applicable to Codellama, such as [Llama license](https://github.com/lqtrung1998/mwp_ReFT/Llama_License.txt), also hold on these models
+Note: Our models are tuned based on Codellama, thus, licenses applicable to Codellama, such as [Llama license](https://github.com/lqtrung1998/mwp_ReFT/blob/main/Llama_License.txt), also hold on these models
 
 ## License:
-[Apache2.0 License](https://github.com/lqtrung1998/mwp_ReFT/License.txt)
+[Apache2.0 License](https://github.com/lqtrung1998/mwp_ReFT/blob/main/License.txt)
 
 ## Citation
 Please cite the paper if you use our data, model or code.
