@@ -1,5 +1,5 @@
 # ReFT: Reasoning with REinforced Fine-Tuning
-This repo contains source code and data to reproduce the results in the research paper [ReFT: Reasoning with REinforced Fine-Tuning]()
+This repo contains source code and data to reproduce the results in the research paper ```ReFT: Reasoning with REinforced Fine-Tuning```
 
 ## Instruction
 ### SFT
