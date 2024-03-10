@@ -50,4 +50,3 @@ n_epochs='300' \
 kl_coef='0.05' \
     bash exps/paper_exps/ReFT/_template.sh
 
-python3 ocp.py

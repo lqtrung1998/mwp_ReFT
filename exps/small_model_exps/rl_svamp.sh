@@ -56,6 +56,7 @@ accelerate launch \
             --model_dir "${model_dir}" \
             --batch_size "${batch_size}" \
             --mini_batch_size "${mini_batch_size}" \
+            --eval_batch_size "${eval_batch_size}" \
             --ppo_epochs "${ppo_epochs}" \
             --n_epochs "${n_epochs}" \
             --num_workers "${num_workers}" \

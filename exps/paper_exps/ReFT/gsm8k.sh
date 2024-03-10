@@ -49,5 +49,3 @@ tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/gsm8k_nl_galacti
 n_epochs='300' \
 kl_coef='0.05' \
     bash exps/paper_exps/ReFT/_template.sh
-
-python3 ocp.py
