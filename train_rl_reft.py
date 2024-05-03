@@ -36,6 +36,11 @@ import shutil
 from prettytable import PrettyTable
 tqdm = partial(tqdm, ncols=0, leave=False)
 
+def disable_dropout_in_model(model: torch.nn.Module) -> None:
+    for module in model.modules():
+        if isinstance(module, torch.nn.Dropout):
+            module.p = 0
+
 TIMEOUT = 10
 instruction=None
 cot_trigger=None
@@ -150,7 +155,8 @@ def prepare_datasets_and_data_loaders(args, tokenizer):
 
                 # Modify for particular datasets and engine
                 if src_name in ['gsm8k', 'mathqa', 'svamp', 'mathqa-numeric'] and args['engine'] == 'python':
-                    prefix_text += f'def solution():\n    """{question}"""\n'
+                    # To decide \n should be included at the end based on the tokenizer
+                    prefix_text += f'def solution():\n    """{question}"""' 
 
                 input_encode = tokenizer(input, add_special_tokens=False)
                 output_encode = tokenizer(output, add_special_tokens=False)
@@ -161,6 +167,14 @@ def prepare_datasets_and_data_loaders(args, tokenizer):
                 attention_mask = [1] * len(input_ids)
                 prefix = prefix_encode['input_ids']
                 prefix_attention_mask = prefix_encode['attention_mask']
+
+                if 'gemma' in args['model_name_or_path']:
+                    # Quick fix for gemma -- https://github.com/huggingface/transformers/issues/29250
+                    input_ids = [tokenizer.bos_token_id] + input_ids
+                    labels = [-100] + labels
+                    attention_mask = [1] + attention_mask
+                    prefix = [tokenizer.bos_token_id] + prefix
+                    prefix_attention_mask = [1] + prefix_attention_mask
 
                 # Truncation
                 input_ids = input_ids[:args['max_input_length']]
@@ -319,13 +333,19 @@ def rollout(args, model, ref_model, tokenizer, query_tensors, query_tensors_atte
     model_attention_mask = (completed_tensors != tokenizer.pad_token_id)
     with torch.no_grad():
         # Get old logprob and val
-        lm_logits, _dummy2, val = model(input_ids=model_input_ids, attention_mask=model_attention_mask)
+        ## Some model need to pass position_ids
+        position_ids=None
+        if args['pass_gpt2_position_ids']:
+            position_ids = model_attention_mask.long().cumsum(-1) - 1
+            position_ids.masked_fill_(model_attention_mask == 0, 1)
+        lm_logits, _dummy2, val = model(input_ids=model_input_ids, attention_mask=model_attention_mask, position_ids=position_ids)
         old_logprob = logprobs_from_logits(lm_logits[:, :-1, :], labels=model_input_ids[:, 1:])  # (bs, seqlen-1)
 
         # Get the ref model logprob
         ref_logprob = None
         if ref_model is not None:
-            ref_lm_logits, _dummy2, _dummy3 = ref_model(input_ids=model_input_ids, attention_mask=model_attention_mask)
+            ## Some model need to pass position_ids
+            ref_lm_logits, _dummy2, _dummy3 = ref_model(input_ids=model_input_ids, attention_mask=model_attention_mask, position_ids=position_ids)
             ref_logprob = logprobs_from_logits(ref_lm_logits[:, :-1, :], labels=model_input_ids[:, 1:])  # (bs, seqlen-1)
 
     # Masking the last prompt token up untils the token before eos_token_id
@@ -452,8 +472,12 @@ def train_one_epoch(args, model, ref_model, train_dataset, train_dataloader, opt
                     mean_adv, var_adv = masked_mean(cur_adv, cur_mask), masked_var(cur_adv, cur_mask)
 
                     # Forward current model
-                    model.eval()
-                    lm_logits, _, vpreds = model(input_ids=cur_model_input_ids, attention_mask=cur_model_attention_mask)
+                    # model.eval()
+                    position_ids=None
+                    if args['pass_gpt2_position_ids']:
+                        position_ids = cur_model_attention_mask.long().cumsum(-1) - 1
+                        position_ids.masked_fill_(cur_model_attention_mask == 0, 1)
+                    lm_logits, _, vpreds = model(input_ids=cur_model_input_ids, attention_mask=cur_model_attention_mask, position_ids=position_ids)
                     logprob = logprobs_from_logits(lm_logits[:, :-1, :], cur_model_input_ids[:, 1:])  # (mini_bs, seqlen-1)
 
                     # Compute losses
@@ -721,7 +745,7 @@ def evaluate_generation(args, model, dataset, dataloader, tokenizer):
             ## Processing target
             target_cot = tar.strip().split(cot_trigger)[-1].strip()
             target_value = post_process_final_answer_fn_mapper[src_name](cur_res['answer_value'])
-            cur_res['target'] = target
+            cur_res['target'] = tar
             cur_res['target_cot'] = target_cot
             cur_res['target_value'] = target_value
             ## Processing prediction
@@ -767,20 +791,29 @@ def main(args):
         wandb.config.update(args)
         
     tokenizer = AutoTokenizer.from_pretrained(args['tokenizer_name_or_path'], use_fast=True)
-    tokenizer.pad_token_id = 1
-    tokenizer.eos_token_id = 2
+    if tokenizer.eos_token_id is None: 
+        tokenizer.add_special_tokens({'eos_token': '<eos>'})
+    if tokenizer.pad_token_id is None or (tokenizer.eos_token_id == tokenizer.pad_token_id):
+        # Require pad_token_id != eos_token_id
+        tokenizer.add_special_tokens({'pad_token': '<pad>'})
 
     (train_dataset, train_dataloader), (test_dataset, test_dataloader) = prepare_datasets_and_data_loaders(args, tokenizer)
 
     MODEL_CLASS = AutoModelForCausalLMWithValueHead
     model = MODEL_CLASS.from_pretrained(args['model_name_or_path'])
+    disable_dropout_in_model(model)
     # accelerator.print(f'[Vocab size]: {len(tokenizer)}')
     # model.resize_token_embeddings(len(tokenizer))
+
+    if args['gradient_checkpointing_enable']:
+        model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
 
     # initialize ref model (if any)
     ref_model = None
     if args['ref_model_name_or_path']:
         ref_model = AutoModelForCausalLMWithValueHead.from_pretrained(args['ref_model_name_or_path'])
+        disable_dropout_in_model(ref_model)
+        ref_model.eval()
         # from copy import deepcopy
         # ref_model = deepcopy(model)
 
@@ -926,6 +959,8 @@ if __name__ == '__main__':
         max_input_length: int = field(default=700)
         max_gen_length: int = field(default=700)
         keep_num_ckpt: int = field(default=5)
+        gradient_checkpointing_enable: bool = field(default=True)
+        pass_gpt2_position_ids: bool = field(default=False)
         # wandb stuff
         wandb_log: bool = field(default=False)
         wandb_project: str = field(default='tmp_anvfupsadfn')

@@ -118,6 +118,14 @@ def prepare_datasets_and_data_loaders(args, tokenizer):
                 prefix = prefix_encode['input_ids']
                 prefix_attention_mask = prefix_encode['attention_mask']
 
+                if 'gemma' in args['model_name_or_path']:
+                    # Quick fix for gemma -- https://github.com/huggingface/transformers/issues/29250
+                    input_ids = [tokenizer.bos_token_id] + input_ids
+                    labels = [-100] + labels
+                    attention_mask = [1] + attention_mask
+                    prefix = [tokenizer.bos_token_id] + prefix
+                    prefix_attention_mask = [1] + prefix_attention_mask
+
                 # Truncation
                 input_ids_max_length = len(input_ids)
                 # assert input_ids_max_length <= args['max_input_length'], input_ids_max_length
@@ -339,7 +347,7 @@ def evaluate_generation(args, model, dataset, dataloader, tokenizer):
             ## Processing target
             target_cot = tar.strip().split(cot_trigger)[-1].strip()
             target_value = post_process_final_answer_fn_mapper[src_name](cur_res['answer_value'])
-            cur_res['target'] = target
+            cur_res['target'] = tar
             cur_res['target_cot'] = target_cot
             cur_res['target_value'] = target_value
             ## Processing prediction
@@ -389,8 +397,10 @@ def main(args):
         wandb.config.update(args)
         
     tokenizer = AutoTokenizer.from_pretrained(args['tokenizer_name_or_path'], use_fast=True)
-    tokenizer.pad_token_id = 1
-    tokenizer.eos_token_id = 2
+    if tokenizer.eos_token_id is None: 
+        tokenizer.add_special_tokens({'eos_token': '<eos>'})
+    if tokenizer.pad_token_id is None or (tokenizer.eos_token_id == tokenizer.pad_token_id):
+        tokenizer.add_special_tokens({'pad_token': '<pad>'})
 
     (train_dataset, train_dataloader), (test_dataset, test_dataloader) = prepare_datasets_and_data_loaders(args, tokenizer)
     model = AutoModelForCausalLM.from_pretrained(args['model_name_or_path'], low_cpu_mem_usage=True, torch_dtype=torch.bfloat16)

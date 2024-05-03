@@ -69,15 +69,22 @@ compare_answer_fn_mapper = {
     'mathqa-numeric': lambda extracted_ans, target_answer: abs(extracted_ans - target_answer) <= 1e-2,
 }
 
-def tokenize_fn(examples: Dict, tokenizer, max_length, src_name, engine):
+def tokenize_fn(examples: Dict, tokenizer, max_length, src_name, engine, model_name_or_path):
     features = {"input_ids": [], "attention_mask": [], "answer_value": [], "answer_cot": [], "question": [], 'item_id': []}
     for idx, question in enumerate(examples["question"]):
         text = f"{instruction}{question}{cot_trigger}"
         if src_name in ['gsm8k', 'mathqa', 'svamp', 'mathqa-numeric'] and engine == 'python':
-            text += f'def solution():\n    """{question}"""\n'
+            # To decide \n should be included at the end based on the tokenizer
+            text += f'def solution():\n    """{question}"""'
         source_text_res = tokenizer.encode_plus(text, max_length=max_length, truncation=True, add_special_tokens=False)
         features["input_ids"].append(source_text_res["input_ids"])
         features["attention_mask"].append(source_text_res["attention_mask"])
+
+        if 'gemma' in model_name_or_path:
+            # Quick fix for gemma -- https://github.com/huggingface/transformers/issues/29250
+            features["input_ids"][-1] = [tokenizer.bos_token_id] + features["input_ids"][-1]
+            features["attention_mask"][-1] = [1] + features["attention_mask"][-1]
+
         features["question"].append(question)
         features["answer_value"].append(examples["answer_value"][idx])
         features["answer_cot"].append(None if "answer_cot" not in examples else examples["answer_cot"][idx])
@@ -115,8 +122,10 @@ def main(args):
     do_sample = args['do_sample']
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
-    tokenizer.pad_token_id = 1
-    tokenizer.eos_token_id = 2
+    if tokenizer.pad_token_id is None:
+        tokenizer.add_special_tokens({'pad_token': '<pad>'})
+    if tokenizer.eos_token_id is None: 
+        tokenizer.add_special_tokens({'eos_token': '<eos>'})
 
     # loading training data
     raw_dataset = Dataset.from_list(json.load(open(input_path,'r')))
@@ -127,7 +136,7 @@ def main(args):
     accelerator.print('Using cot_trigger:', cot_trigger)
     accelerator.print('Using answer_trigger:', answer_trigger)
     tokenized_dataset = raw_dataset.map(
-        tokenize_fn, fn_kwargs={'tokenizer': tokenizer, 'max_length': max_length, 'src_name': src_name, 'engine': engine},
+        tokenize_fn, fn_kwargs={'tokenizer': tokenizer, 'max_length': max_length, 'src_name': src_name, 'engine': engine, 'model_name_or_path': model_name},
         batched=True, remove_columns=raw_dataset.column_names, load_from_cache_file=False, num_proc=8
     )
     valid_dataloader = DataLoader(tokenized_dataset, batch_size=batch_size, shuffle=False, num_workers=8, collate_fn=partial(collate_fn, tokenizer=tokenizer))

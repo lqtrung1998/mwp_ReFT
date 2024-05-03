@@ -118,7 +118,8 @@ def prepare_datasets_and_data_loaders(args, tokenizer):
 
                 # Modify for particular datasets and engine to speed up training
                 if src_name in ['gsm8k', 'mathqa', 'svamp', 'mathqa-numeric'] and args['engine'] == 'python':
-                    prefix_text += f'def solution():\n    """{question}"""\n'
+                    # To decide \n should be included at the end based on the tokenizer
+                    prefix_text += f'def solution():\n    """{question}"""'
 
                 input_encode = tokenizer(input, add_special_tokens=False)
                 output_encode = tokenizer(output, add_special_tokens=False)
@@ -136,6 +137,14 @@ def prepare_datasets_and_data_loaders(args, tokenizer):
                 attention_mask = attention_mask[:args['max_input_length']]
                 prefix = prefix[:args['max_input_length']]
                 prefix_attention_mask = prefix_attention_mask[:args['max_input_length']]
+
+                if 'gemma' in args['model_name_or_path']:
+                    # Quick fix for gemma -- https://github.com/huggingface/transformers/issues/29250
+                    input_ids = [tokenizer.bos_token_id] + input_ids
+                    labels = [-100] + labels
+                    attention_mask = [1] + attention_mask
+                    prefix = [tokenizer.bos_token_id] + prefix
+                    prefix_attention_mask = [1] + prefix_attention_mask
 
                 ##
                 new_batch['input_ids'].append(input_ids)
@@ -337,7 +346,11 @@ def train_one_epoch(args, model, train_dataset, train_dataloader, optimizer, sch
                 cur_model_input_ids = model_input_ids[b_inds][cur_correctness==1]
                 cur_model_attention_mask = model_attention_mask[b_inds][cur_correctness==1]
                 if cur_model_input_ids.size(0) > 0:
-                    loss += model(input_ids=cur_model_input_ids, attention_mask=cur_model_attention_mask, labels=cur_labels)[0] / 2
+                    position_ids = None
+                    if args['pass_gpt2_position_ids']:
+                        position_ids = cur_model_attention_mask.long().cumsum(-1) - 1
+                        position_ids.masked_fill_(cur_model_attention_mask == 0, 1)
+                    loss += model(input_ids=cur_model_input_ids, attention_mask=cur_model_attention_mask, labels=cur_labels, position_ids=position_ids)[0] / 2
                 
                 cur_sft_model_input_ids = sft_model_input_ids[b_inds]
                 cur_sft_model_attention_mask = sft_model_attention_mask[b_inds]
@@ -515,7 +528,7 @@ def evaluate_generation(args, model, dataset, dataloader, tokenizer):
             ## Processing target
             target_cot = tar.strip().split(cot_trigger)[-1].strip()
             target_value = post_process_final_answer_fn_mapper[src_name](cur_res['answer_value'])
-            cur_res['target'] = target
+            cur_res['target'] = tar
             cur_res['target_cot'] = target_cot
             cur_res['target_value'] = target_value
             ## Processing prediction
@@ -561,15 +574,17 @@ def main(args):
         wandb.config.update(args)
         
     tokenizer = AutoTokenizer.from_pretrained(args['tokenizer_name_or_path'], use_fast=True)
-    tokenizer.pad_token_id = 1
-    tokenizer.eos_token_id = 2
+    if tokenizer.eos_token_id is None: 
+        tokenizer.add_special_tokens({'eos_token': '<eos>'})
+    if tokenizer.pad_token_id is None or (tokenizer.eos_token_id == tokenizer.pad_token_id):
+        tokenizer.add_special_tokens({'pad_token': '<pad>'})
 
     (train_dataset, train_dataloader), (test_dataset, test_dataloader) = prepare_datasets_and_data_loaders(args, tokenizer)
 
     MODEL_CLASS = AutoModelForCausalLM
     model = MODEL_CLASS.from_pretrained(args['model_name_or_path'])
-    # accelerator.print(f'[Vocab size]: {len(tokenizer)}')
-    # model.resize_token_embeddings(len(tokenizer))
+    accelerator.print(f'[Vocab size]: {len(tokenizer)}')
+    model.resize_token_embeddings(len(tokenizer))
 
     # optimizer
     n_epochs = args['n_epochs']
@@ -694,6 +709,7 @@ if __name__ == '__main__':
         max_input_length: int = field(default=700)
         max_gen_length: int = field(default=700)
         keep_num_ckpt: int = field(default=5)
+        pass_gpt2_position_ids: bool =field(default=False)
         # wandb stuff
         wandb_log: bool = field(default=False)
         wandb_project: str = field(default='tmp_anvfupsadfn')
