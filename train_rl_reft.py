@@ -34,6 +34,7 @@ import numpy as np
 import wandb
 import shutil
 from prettytable import PrettyTable
+import gc
 tqdm = partial(tqdm, ncols=0, leave=False)
 
 def disable_dropout_in_model(model: torch.nn.Module) -> None:
@@ -41,7 +42,7 @@ def disable_dropout_in_model(model: torch.nn.Module) -> None:
         if isinstance(module, torch.nn.Dropout):
             module.p = 0
 
-TIMEOUT = 10
+TIMEOUT = 2
 instruction=None
 cot_trigger=None
 answer_trigger=None
@@ -523,11 +524,11 @@ def train_one_epoch(args, model, ref_model, train_dataset, train_dataloader, opt
                     # value related metrics
                     # vf_expl_var_num = torch.var(torch.masked_select(cur_ret - vpreds, cur_mask.bool())) 
                     # vf_expl_var_dem = torch.var(torch.masked_select(cur_ret, cur_mask.bool()))
-                    vf_expl_var_num = masked_var(cur_ret - vpreds, cur_mask)
+                    vf_expl_var_num = masked_var(cur_ret - vpreds.detach(), cur_mask)
                     vf_expl_var_dem = masked_var(cur_ret, cur_mask)
                     vf_expl_var = 1.0 - vf_expl_var_num / (vf_expl_var_dem + 1e-8)
                     vf_expl_var = max(-1.0, vf_expl_var.item())  # the truncated value suffices
-                    mean_vpred = masked_mean(vpreds, cur_mask)
+                    mean_vpred = masked_mean(vpreds.detach(), cur_mask)
                     mean_return = masked_mean(cur_ret, cur_mask)
                     mean_reward = masked_mean(cur_rew, cur_mask)
                     mean_score_reward = masked_mean(cur_score_rew, cur_mask)
@@ -535,9 +536,9 @@ def train_one_epoch(args, model, ref_model, train_dataset, train_dataloader, opt
                     mean_kcxkl_reward = args["kl_coef"] * mean_kl_reward
 
                     # policy related metrics
-                    mean_ratio = masked_mean(ratio, cur_mask[:, :-1])
+                    mean_ratio = masked_mean(ratio.detach(), cur_mask[:, :-1])
                     #mean_adv = masked_mean(cur_adv[:, :-1], cur_mask[:, :-1])
-                    mean_logprob = masked_mean(logprob, cur_mask[:, :-1])
+                    mean_logprob = masked_mean(logprob.detach(), cur_mask[:, :-1])
                     # sequence-level kl
                     mean_seq_kl = -1.0
                     if cur_kl_rew is not None:
@@ -642,7 +643,8 @@ def train_one_epoch(args, model, ref_model, train_dataset, train_dataloader, opt
                             "value/mean_kcxkl_reward": mean_kcxkl_reward,
                         }, step=global_iter_num)
                     # Update iter num
-                    # torch.distributed.barrier()
+                    torch.distributed.barrier()
+                    gc.collect()
                     global_iter_num += 1
 
             scheduler.step()

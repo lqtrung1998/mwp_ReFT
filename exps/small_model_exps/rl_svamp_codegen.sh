@@ -1,19 +1,21 @@
 #!/bin/bash
 export TOKENIZERS_PARALLELISM=True
-exp_name="gsm8k_python_sdp_galactica_125m_reft"
-model_dir="ppo_paper_final_new/_models_outputs_rl_small/gsm8k_python_sdp_galactica_125m_reft"
-train_file="data/gsm8k_python_sdp.json"
-test_file="data/gsm8k_test_set.json"
+exp_name="svamp_python_sdp_codegen_350M-mono_reft"
+model_dir="ppo_paper_final_new/_models_outputs_rl_small/svamp_python_sdp_codegen_350M-mono_reft"
+train_file="data/svamp_python_sdp.json"
+test_file="data/svamp_test_set.json"
 engine='python' # 'python' or 'nl'
 
-model_name_or_path="ppo_paper_final_new/_models_outputs_sft_small/gsm8k_python_sdp_galactica_125m/global_step_1540_epoch_10/"
-tokenizer_name_or_path="ppo_paper_final_new/_models_outputs_sft_small/gsm8k_python_sdp_galactica_125m/global_step_1540_epoch_10/"
-ref_model_name_or_path="ppo_paper_final_new/_models_outputs_sft_small/gsm8k_python_sdp_galactica_125m/global_step_1540_epoch_10/"
+pass_gpt2_position_ids='True'
+
+model_name_or_path="ppo_paper_final_new/_models_outputs_sft_small/svamp_python_sdp_codegen_350M-mono/global_step_640_epoch_10/"
+tokenizer_name_or_path="ppo_paper_final_new/_models_outputs_sft_small/svamp_python_sdp_codegen_350M-mono/global_step_640_epoch_10/"
+ref_model_name_or_path="ppo_paper_final_new/_models_outputs_sft_small/svamp_python_sdp_codegen_350M-mono/global_step_640_epoch_10/"
 
 keep_num_ckpt='0'
-batch_size="32"
-mini_batch_size="32"
-eval_batch_size="32"
+batch_size="16"
+mini_batch_size="16"
+eval_batch_size="16"
 ppo_epochs="2"
 n_epochs="700"
 num_workers="0"
@@ -21,26 +23,27 @@ learning_rate="3e-6"
 weight_decay="0"
 warmup_step="0"
 clip_grad_norm="1"
-vf_coef="5"
+vf_coef="0.1"
 kl_coef="0.01"
 gamma="1.0"
 lam="0.95"
 adv_whitening='global'
 evaluating_epoch_freq="1"
 logging_epoch_freq="1"
-saving_epoch_freq="1"
+saving_epoch_freq="-100"
 evaluating_step_freq="-100"
 logging_step_freq="1"
 saving_step_freq="-100"
-seed="42"
+seed="43"
 max_input_length="300"
-max_gen_length="700"
+max_gen_length="500"
 wandb_log="True"
 wandb_project="ReFT_small"
 wandb_run_name="${exp_name}"
 
 num_processes='8'
 main_process_port='8888'
+gradient_checkpointing_enable='False'
 
 mkdir -p "${model_dir}"
 accelerate launch \
@@ -56,6 +59,7 @@ accelerate launch \
             --model_dir "${model_dir}" \
             --batch_size "${batch_size}" \
             --mini_batch_size "${mini_batch_size}" \
+            --eval_batch_size "${eval_batch_size}" \
             --ppo_epochs "${ppo_epochs}" \
             --n_epochs "${n_epochs}" \
             --num_workers "${num_workers}" \
@@ -76,6 +80,8 @@ accelerate launch \
             --seed "${seed}" \
             --max_input_length "${max_input_length}" \
             --max_gen_length "${max_gen_length}" \
+            --gradient_checkpointing_enable "${gradient_checkpointing_enable}" \
+            --pass_gpt2_position_ids "${pass_gpt2_position_ids}" \
             --wandb_log "${wandb_log}" \
             --wandb_project "${wandb_project}" \
             --wandb_run_name "${wandb_run_name}" \
