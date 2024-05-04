@@ -34,3 +34,20 @@ evaluating_step_freq='175' \
 saving_step_freq='175' \
     bash exps/paper_exps/OffSL/_template.sh
 
+# gemma-7b
+exp_name="mathqa-numeric_nl_gemma_offsl" \
+train_file='data/mathqa-numeric_nl.json | ppo_paper_final_new/_models_outputs_sft/mathqa-numeric_nl_gemma/sampling_results/global_step_1870_epoch_10_100_temp_1.0_do_sample_1_train.json' \
+test_file='data/mathqa-numeric_test_set.json' \
+engine='nl' \
+model_name_or_path='hf_models/gemma-7b/' \
+tokenizer_name_or_path='hf_models/gemma-7b/' \
+n_epochs='20' \
+self_learning_samples='10' \
+logging_epoch_freq='-100' \
+evaluating_epoch_freq='-100' \
+saving_epoch_freq='-100' \
+logging_step_freq='175' \
+evaluating_step_freq='175' \
+saving_step_freq='175' \
+    bash exps/paper_exps/OffSL/_template.sh
+

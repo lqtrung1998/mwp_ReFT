@@ -11,6 +11,7 @@ ref_model_name_or_path=${ref_model_name_or_path:-''}
 tokenizer_name_or_path=${tokenizer_name_or_path:-''}
 n_epochs=${n_epochs:-''}
 kl_coef=${kl_coef:-''} # For NL should put 0.05, For Python put 0.01
+pass_gpt2_position_ids=${pass_gpt2_position_ids:-'False'}
 
 ### Default variables
 model_dir="ppo_paper_final_new/_models_outputs_rl/${exp_name}/"
@@ -86,6 +87,7 @@ accelerate launch \
             --seed "${seed}" \
             --max_input_length "${max_input_length}" \
             --max_gen_length "${max_gen_length}" \
+            --pass_gpt2_position_ids "${pass_gpt2_position_ids}" \
             --wandb_log "${wandb_log}" \
             --wandb_project "${wandb_project}" \
             --wandb_run_name "${wandb_run_name}" \

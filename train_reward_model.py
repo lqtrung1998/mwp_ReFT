@@ -85,6 +85,10 @@ def prepare_datasets_and_data_loaders(args, tokenizer):
                     attention_mask = [1]* len(input_ids)
                     labels = prediction_correctness 
 
+                    if 'gemma' in args['model_name_or_path']:
+                        input_ids = [tokenizer.bos_token_id] + input_ids
+                        attention_mask = [1] + attention_mask
+                    
                     # Truncation and filtering 
                     input_ids = input_ids[:args['max_input_length']]
                     attention_mask = attention_mask[:args['max_input_length']]
@@ -321,8 +325,10 @@ def main(args):
         wandb.config.update(args)
         
     tokenizer = AutoTokenizer.from_pretrained(args['tokenizer_name_or_path'], use_fast=True)
-    tokenizer.pad_token_id = 1
-    tokenizer.eos_token_id = 2
+    if tokenizer.eos_token_id is None: 
+        tokenizer.add_special_tokens({'eos_token': '<eos>'})
+    if tokenizer.pad_token_id is None or (tokenizer.eos_token_id == tokenizer.pad_token_id):
+        tokenizer.add_special_tokens({'pad_token': '<pad>'})
 
     (train_dataset, train_dataloader), (test_dataset, test_dataloader) = prepare_datasets_and_data_loaders(args, tokenizer)
     model = AutoModelForSequenceClassification.from_pretrained(args['model_name_or_path'], num_labels=2, torch_dtype=torch.bfloat16)
@@ -335,6 +341,7 @@ def main(args):
         wandb.run.summary.update({
             'pad_token_id': tokenizer.pad_token_id,
             'eos_token_id': tokenizer.eos_token_id,
+            'unk_token_id': tokenizer.unk_token_id,
             'vocab_size': len(tokenizer)
         })
 

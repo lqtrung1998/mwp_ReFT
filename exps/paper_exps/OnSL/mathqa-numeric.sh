@@ -19,3 +19,14 @@ model_name_or_path='ppo_paper_final_new/_models_outputs_sft/mathqa-numeric_nl_ga
 tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/mathqa-numeric_nl_galactica/global_step_1870_epoch_10/' \
 n_epochs='300' \
     bash exps/paper_exps/OnSL/_template.sh
+
+# gemma-7b
+exp_name="mathqa-numeric_nl_gemma_onsl" \
+train_file="data/mathqa-numeric_nl.json" \
+test_file="data/mathqa-numeric_test_set.json" \
+engine="nl" \
+model_name_or_path='ppo_paper_final_new/_models_outputs_sft/mathqa-numeric_nl_gemma/global_step_1870_epoch_10/' \
+tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/mathqa-numeric_nl_gemma/global_step_1870_epoch_10/' \
+n_epochs='300' \
+pass_gpt2_position_ids='True' \
+    bash exps/paper_exps/OnSL/_template.sh

@@ -20,6 +20,16 @@ tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/svamp_python_sdp
 n_epochs='300' \
     bash exps/paper_exps/OnSL/_template.sh
 
+# gemma-7b
+exp_name="svamp_python_sdp_gemma_onsl" \
+train_file="data/svamp_python_sdp.json" \
+test_file="data/svamp_test_set.json" \
+engine="python" \
+model_name_or_path='ppo_paper_final_new/_models_outputs_sft/svamp_python_sdp_gemma/global_step_128_epoch_2/' \
+tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/svamp_python_sdp_gemma/global_step_128_epoch_2/' \
+n_epochs='300' \
+pass_gpt2_position_ids='True' \
+    bash exps/paper_exps/OnSL/_template.sh
 
 ## NL
 # Codellama
@@ -40,4 +50,15 @@ engine="nl" \
 model_name_or_path='ppo_paper_final_new/_models_outputs_sft/svamp_nl_galactica/global_step_130_epoch_2/' \
 tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/svamp_nl_galactica/global_step_130_epoch_2/' \
 n_epochs='300' \
+    bash exps/paper_exps/OnSL/_template.sh
+
+# gemma-7b
+exp_name="svamp_nl_gemma_onsl" \
+train_file="data/svamp_nl.json" \
+test_file="data/svamp_test_set.json" \
+engine="nl" \
+model_name_or_path='ppo_paper_final_new/_models_outputs_sft/svamp_nl_gemma/global_step_130_epoch_2/' \
+tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/svamp_nl_gemma/global_step_130_epoch_2/' \
+n_epochs='300' \
+pass_gpt2_position_ids='True' \
     bash exps/paper_exps/OnSL/_template.sh

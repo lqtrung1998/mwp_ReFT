@@ -24,6 +24,18 @@ n_epochs='300' \
 kl_coef='0.01' \
     bash exps/paper_exps/ReFT/_template.sh
 
+# gemma-7b
+exp_name="mathqa_python_sdp_gemma_reft" \
+train_file='data/mathqa_python_sdp.json' \
+test_file='data/mathqa_test_set.json' \
+engine='python' \
+model_name_or_path='ppo_paper_final_new/_models_outputs_sft/mathqa_python_sdp_gemma/global_step_636_epoch_2/' \
+ref_model_name_or_path='ppo_paper_final_new/_models_outputs_sft/mathqa_python_sdp_gemma/global_step_636_epoch_2/' \
+tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/mathqa_python_sdp_gemma/global_step_636_epoch_2/' \
+n_epochs='300' \
+kl_coef='0.01' \
+pass_gpt2_position_ids='True' \
+    bash exps/paper_exps/ReFT/_template.sh
 
 ## NL
 # Codellama
@@ -50,3 +62,15 @@ n_epochs='300' \
 kl_coef='0.05' \
     bash exps/paper_exps/ReFT/_template.sh
 
+# gemma-7b
+exp_name="mathqa_nl_gemma_reft" \
+train_file='data/mathqa_nl.json' \
+test_file='data/mathqa_test_set.json' \
+engine='nl' \
+model_name_or_path='ppo_paper_final_new/_models_outputs_sft/mathqa_nl_gemma/global_step_1550_epoch_5/' \
+ref_model_name_or_path='ppo_paper_final_new/_models_outputs_sft/mathqa_nl_gemma/global_step_1550_epoch_5/' \
+tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/mathqa_nl_gemma/global_step_1550_epoch_5/' \
+n_epochs='300' \
+kl_coef='0.05' \
+pass_gpt2_position_ids='True' \
+    bash exps/paper_exps/ReFT/_template.sh

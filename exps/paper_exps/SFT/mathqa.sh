@@ -20,6 +20,17 @@ tokenizer_name_or_path='hf_models/galactica-6.7b/' \
 n_epochs='40' \
     bash exps/paper_exps/SFT/_template.sh
 
+# gemma-7b
+exp_name="mathqa_python_sdp_gemma" \
+train_file='data/mathqa_python_sdp.json' \
+test_file='data/mathqa_test_set.json' \
+engine='python' \
+model_name_or_path='hf_models/gemma-7b/' \
+tokenizer_name_or_path='hf_models/gemma-7b/' \
+n_epochs='40' \
+    bash exps/paper_exps/SFT/_template.sh
+
+
 # NL
 # Codellama
 exp_name="mathqa_nl_codellama" \
@@ -38,5 +49,15 @@ test_file='data/mathqa_test_set.json' \
 engine='nl' \
 model_name_or_path='hf_models/galactica-6.7b/' \
 tokenizer_name_or_path='hf_models/galactica-6.7b/' \
+n_epochs='40' \
+    bash exps/paper_exps/SFT/_template.sh
+
+# gemma-7b
+exp_name="mathqa_nl_gemma" \
+train_file='data/mathqa_nl.json' \
+test_file='data/mathqa_test_set.json' \
+engine='nl' \
+model_name_or_path='hf_models/gemma-7b/' \
+tokenizer_name_or_path='hf_models/gemma-7b/' \
 n_epochs='40' \
     bash exps/paper_exps/SFT/_template.sh

@@ -18,6 +18,15 @@ tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/gsm8k_python_sdp
 n_epochs='3' \
     bash exps/paper_exps/Rerank/_template.sh
 
+# gemma-7b
+exp_name="gsm8k_python_sdp_gemma_rerank" \
+train_file='ppo_paper_final_new/_models_outputs_sft/gsm8k_python_sdp_gemma/sampling_results/global_step_308_epoch_2_100_temp_1.0_do_sample_1_train.json' \
+test_file='ppo_paper_final_new/_models_outputs_sft/gsm8k_python_sdp_gemma/sampling_results/best_100_temp_1.0_do_sample_1_test.json' \
+model_name_or_path='ppo_paper_final_new/_models_outputs_sft/gsm8k_python_sdp_gemma/best/' \
+tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/gsm8k_python_sdp_gemma/best/' \
+n_epochs='3' \
+    bash exps/paper_exps/Rerank/_template.sh
+
 ## NL
 # Codellama
 exp_name="gsm8k_nl_codellama_rerank" \
@@ -34,5 +43,14 @@ train_file='ppo_paper_final_new/_models_outputs_sft/gsm8k_nl_galactica/sampling_
 test_file='ppo_paper_final_new/_models_outputs_sft/gsm8k_nl_galactica/sampling_results/global_step_5304_epoch_34_100_temp_1.0_do_sample_1_test.json' \
 model_name_or_path='ppo_paper_final_new/_models_outputs_sft/gsm8k_nl_galactica/global_step_5304_epoch_34/' \
 tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/gsm8k_nl_galactica/global_step_5304_epoch_34/' \
+n_epochs='3' \
+    bash exps/paper_exps/Rerank/_template.sh
+
+# gemma-7b
+exp_name="gsm8k_nl_gemma_rerank" \
+train_file='ppo_paper_final_new/_models_outputs_sft/gsm8k_nl_gemma/sampling_results/global_step_312_epoch_2_100_temp_1.0_do_sample_1_train.json' \
+test_file='ppo_paper_final_new/_models_outputs_sft/gsm8k_nl_gemma/sampling_results/best_100_temp_1.0_do_sample_1_test.json' \
+model_name_or_path='ppo_paper_final_new/_models_outputs_sft/gsm8k_nl_gemma/best/' \
+tokenizer_name_or_path='ppo_paper_final_new/_models_outputs_sft/gsm8k_nl_gemma/best/' \
 n_epochs='3' \
     bash exps/paper_exps/Rerank/_template.sh

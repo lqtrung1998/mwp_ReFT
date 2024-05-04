@@ -9,7 +9,7 @@ engine=${engine:-''}
 model_name_or_path=${model_name_or_path:-''}
 tokenizer_name_or_path=${tokenizer_name_or_path:-''}
 n_epochs=${n_epochs:-''}
-
+pass_gpt2_position_ids=${pass_gpt2_position_ids:-'False'}
 ### Default variables
 model_dir="ppo_paper_final_new/_models_outputs_onsl/${exp_name}/"
 config_file="./default_config_deepspeed.yaml"
@@ -74,6 +74,7 @@ accelerate launch \
             --seed "${seed}" \
             --max_input_length "${max_input_length}" \
             --max_gen_length "${max_gen_length}" \
+            --pass_gpt2_position_ids "${pass_gpt2_position_ids}" \
             --wandb_log "${wandb_log}" \
             --wandb_project "${wandb_project}" \
             --wandb_run_name "${wandb_run_name}" \

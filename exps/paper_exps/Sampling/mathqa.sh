@@ -22,6 +22,18 @@ num_return_sequences='100' \
 do_sample='1' \
     bash exps/paper_exps/Sampling/_template.sh
 
+### gemma
+prefix='ppo_paper_final_new/_models_outputs_sft/mathqa_python_sdp_gemma' \
+ckpt_name='global_step_636_epoch_2' \
+input_path='data/mathqa_python_sdp.json' \
+engine='python' \
+batch_size='2' \
+max_length='1024' \
+num_return_sequences='100' \
+do_sample='1' \
+    bash exps/paper_exps/Sampling/_template.sh
+
+
 ## NL 
 ### Codellama
 prefix='ppo_paper_final_new/_models_outputs_sft/mathqa_nl_codellama' \
@@ -36,6 +48,17 @@ do_sample='1' \
 
 ### Galactica
 prefix='ppo_paper_final_new/_models_outputs_sft/mathqa_nl_galactica' \
+ckpt_name='global_step_1550_epoch_5' \
+input_path='data/mathqa_nl.json' \
+engine='nl' \
+batch_size='2' \
+max_length='1024' \
+num_return_sequences='100' \
+do_sample='1' \
+    bash exps/paper_exps/Sampling/_template.sh
+
+### gemma
+prefix='ppo_paper_final_new/_models_outputs_sft/mathqa_nl_gemma' \
 ckpt_name='global_step_1550_epoch_5' \
 input_path='data/mathqa_nl.json' \
 engine='nl' \

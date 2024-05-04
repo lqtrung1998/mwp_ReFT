@@ -34,6 +34,22 @@ evaluating_step_freq='90' \
 saving_step_freq='90' \
     bash exps/paper_exps/OffSL/_template.sh
 
+# gemma-7b
+exp_name="svamp_python_sdp_gemma_offsl" \
+train_file='data/svamp_python_sdp.json | ppo_paper_final_new/_models_outputs_sft/svamp_python_sdp_gemma/sampling_results/global_step_128_epoch_2_100_temp_1.0_do_sample_1_train.json' \
+test_file='data/svamp_test_set.json' \
+engine='python' \
+model_name_or_path='hf_models/gemma-7b/' \
+tokenizer_name_or_path='hf_models/gemma-7b/' \
+n_epochs='20' \
+self_learning_samples='10' \
+logging_epoch_freq='-100' \
+evaluating_epoch_freq='-100' \
+saving_epoch_freq='-100' \
+logging_step_freq='90' \
+evaluating_step_freq='90' \
+saving_step_freq='90' \
+    bash exps/paper_exps/OffSL/_template.sh
 
 # ## NL
 # # Codellama
@@ -60,6 +76,23 @@ test_file='data/svamp_test_set.json' \
 engine='nl' \
 model_name_or_path='hf_models/galactica-6.7b/' \
 tokenizer_name_or_path='hf_models/galactica-6.7b/' \
+n_epochs='20' \
+self_learning_samples='10' \
+logging_epoch_freq='-100' \
+evaluating_epoch_freq='-100' \
+saving_epoch_freq='-100' \
+logging_step_freq='90' \
+evaluating_step_freq='90' \
+saving_step_freq='90' \
+    bash exps/paper_exps/OffSL/_template.sh
+
+# gemma-7b
+exp_name="svamp_nl_gemma_offsl" \
+train_file='data/svamp_nl.json | ppo_paper_final_new/_models_outputs_sft/svamp_nl_gemma/sampling_results/global_step_130_epoch_2_100_temp_1.0_do_sample_1_train.json' \
+test_file='data/svamp_test_set.json' \
+engine='nl' \
+model_name_or_path='hf_models/gemma-7b/' \
+tokenizer_name_or_path='hf_models/gemma-7b/' \
 n_epochs='20' \
 self_learning_samples='10' \
 logging_epoch_freq='-100' \
