@@ -131,13 +131,6 @@ def prepare_datasets_and_data_loaders(args, tokenizer):
                 prefix = prefix_encode['input_ids']
                 prefix_attention_mask = prefix_encode['attention_mask']
 
-                # Truncation
-                input_ids = input_ids[:args['max_input_length']]
-                labels = labels[:args['max_input_length']]
-                attention_mask = attention_mask[:args['max_input_length']]
-                prefix = prefix[:args['max_input_length']]
-                prefix_attention_mask = prefix_attention_mask[:args['max_input_length']]
-
                 if 'gemma' in args['model_name_or_path']:
                     # Quick fix for gemma -- https://github.com/huggingface/transformers/issues/29250
                     input_ids = [tokenizer.bos_token_id] + input_ids
@@ -145,6 +138,13 @@ def prepare_datasets_and_data_loaders(args, tokenizer):
                     attention_mask = [1] + attention_mask
                     prefix = [tokenizer.bos_token_id] + prefix
                     prefix_attention_mask = [1] + prefix_attention_mask
+
+                # Truncation
+                input_ids = input_ids[:args['max_input_length']]
+                labels = labels[:args['max_input_length']]
+                attention_mask = attention_mask[:args['max_input_length']]
+                prefix = prefix[:args['max_input_length']]
+                prefix_attention_mask = prefix_attention_mask[:args['max_input_length']]
 
                 ##
                 new_batch['input_ids'].append(input_ids)
