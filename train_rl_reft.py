@@ -557,7 +557,7 @@ def train_one_epoch(args, model, ref_model, train_dataset, train_dataloader, opt
                         total_grad_norm = 0.0
                         for n, p in model.named_parameters():
                             cur_grad = deepspeed.utils.safe_get_full_grad(p).view(-1)
-                            cur_grad_norm_sqrt = torch.norm(cur_grad, 2)
+                            cur_grad_norm_sqrt = torch.norm(cur_grad, 2).item()
                             if cur_grad_norm_sqrt < 1e-8:
                                 accelerator.print(f'{n} grad_norm_sqrt: {cur_grad_norm_sqrt}')
                             total_grad_norm += cur_grad_norm_sqrt ** 2
@@ -596,13 +596,13 @@ def train_one_epoch(args, model, ref_model, train_dataset, train_dataloader, opt
                     if accelerator.distributed_type == "DEEPSPEED":
                         for n, p in model.named_parameters():
                             cur_param = deepspeed.utils.safe_get_full_fp32_param(p).view(-1)
-                            total_param_norm += torch.norm(cur_param, 2) ** 2
+                            total_param_norm += torch.norm(cur_param, 2).item() ** 2
                         total_param_norm = total_param_norm ** 0.5
                     else:
                         total_param_norm = torch.norm(
                             torch.cat([p.view(-1) for p in model.parameters()]),
                             p=2  # L2 norm
-                        )
+                        ).item()
                     # logging
                     if accelerator.is_main_process and args['wandb_log']:
                         wandb.log({
@@ -616,9 +616,9 @@ def train_one_epoch(args, model, ref_model, train_dataset, train_dataloader, opt
                             "acc/total": train_stats["total"],
                         }, step=global_iter_num)
                         wandb.log({
-                            "loss/loss:": loss,
-                            "loss/pg_loss": pg_loss,
-                            "loss/vf_loss": vf_loss,
+                            "loss/loss:": loss.item(),
+                            "loss/pg_loss": pg_loss.item(),
+                            "loss/vf_loss": vf_loss.item(),
                         }, step=global_iter_num)
                         wandb.log({
                             "tokens/mean_query_len": mean_query_len,
