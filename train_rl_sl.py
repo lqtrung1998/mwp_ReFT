@@ -404,13 +404,13 @@ def train_one_epoch(args, model, train_dataset, train_dataloader, optimizer, sch
                 if accelerator.distributed_type == "DEEPSPEED":
                     for n, p in model.named_parameters():
                         cur_param = deepspeed.utils.safe_get_full_fp32_param(p).view(-1)
-                        total_param_norm += torch.norm(cur_param, 2) ** 2
+                        total_param_norm += torch.norm(cur_param, 2).item() ** 2
                     total_param_norm = total_param_norm ** 0.5
                 else:
                     total_param_norm = torch.norm(
                         torch.cat([p.view(-1) for p in model.parameters()]),
                         p=2  # L2 norm
-                    )
+                    ).item()
                 # logging
                 if torch.distributed.get_rank() == 0 and args['wandb_log']:
                     wandb.log({
@@ -424,7 +424,7 @@ def train_one_epoch(args, model, train_dataset, train_dataloader, optimizer, sch
                         "acc/total": train_stats["total"],
                     }, step=global_iter_num)
                     wandb.log({
-                        "loss/loss:": loss,
+                        "loss/loss:": loss.item(),
                     }, step=global_iter_num)
                 global_iter_num += 1
 
