@@ -37,7 +37,10 @@ def run(code_piece, expr):
         if lib in local_restricted:
             _local_vars[lib] = local_restricted[lib]
     exec(code_piece, _global_vars, _local_vars)
-    result = eval(expr, _global_vars, _local_vars)
+    try:
+        result = eval(expr, _global_vars, _local_vars)
+    except:
+        result = None
     return result
 
 def process_code(code_gen, truncate_first_return=False):
@@ -60,6 +63,24 @@ def process_code(code_gen, truncate_first_return=False):
     updated_code_gen = '\n'.join(updated_code_snippet)
     return updated_code_gen
 
+def get_memory():
+    with open('/proc/meminfo', 'r') as mem:
+        free_memory = 0
+        for i in mem:
+            sline = i.split()
+            if str(sline[0]) in ('MemFree:', 'Buffers:', 'Cached:'):
+                free_memory += int(sline[1])
+    return free_memory  # KiB
+
+import resource
+def initializer(limit):
+    """Set maximum amount of memory each worker process can allocate."""
+    # soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+    # print(get_memory())
+    resource.setrlimit(resource.RLIMIT_AS, (limit, limit)) #bytes
+    pass
+
+
 def run_python_code(programs, TIMEOUT: float, safe=True):
     is_single_program = False
     if not isinstance(programs, list):
@@ -69,7 +90,8 @@ def run_python_code(programs, TIMEOUT: float, safe=True):
     if safe:
         # Safer -- executed code can't affect main code (e.g numpy.random.seed(...))
         # But it is slow ... 
-        with ProcessPool(max_workers=8) as pool:
+        MAX_MEM=2**30*12*10 #20GB mem allowance
+        with ProcessPool(max_workers=8, initializer=initializer, initargs=(int(MAX_MEM),)) as pool:
             futures = [pool.schedule(run, args=[code,  'solution()'], timeout=TIMEOUT) for code in updated_programs]
             results = []
             for i, f in tqdm(enumerate(futures), total=len(futures), disable=True):
@@ -79,6 +101,7 @@ def run_python_code(programs, TIMEOUT: float, safe=True):
                     print(str(e)) #, updated_programs[i])
                     res = None
                 results.append(res)
+            pool.close()
     else:
         results = []
         for code in tqdm(updated_programs, disable=True):
@@ -102,17 +125,17 @@ if __name__ == '__main__':
     def solution():
         """Natalia sold clips to 48 of her friends in April, and then she sold half as many clips in May. How many clips did Natalia sell altogether in April and May?"""
         import time
-        time.sleep(2)
-        from sympy import init_session
-        init_session()
+        # time.sleep(2)
+        # from sympy import init_session
+        # init_session()
         # raise
         clips_april = 48
         clips_may = clips_april / 2
         clips_total = clips_april + clips_may
         result = clips_total
-        # import numpy as np
+        import numpy as np
         # np.random.seed(42)
-        # return np.random.randint(10)
+        np.arange((2**30)//8, dtype="float64")
         # np.random.seed(42)
         return result
     '''.strip()
