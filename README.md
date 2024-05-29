@@ -94,12 +94,11 @@ Updated results:
 ## Citation
 Please cite the paper if you use our data, model or code.
 ```
-@misc{luong2024reft,
+@inproceedings{luong2024reft,
       title={ReFT: Reasoning with Reinforced Fine-Tuning}, 
       author={Trung Quoc Luong and Xinbo Zhang and Zhanming Jie and Peng Sun and Xiaoran Jin and Hang Li},
       year={2024},
-      eprint={2401.08967},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL}
+      booktitle={Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics},
+      url={https://arxiv.org/abs/2404.03592}
 }
 ```
