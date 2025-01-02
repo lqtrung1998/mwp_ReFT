@@ -12,3 +12,4 @@ trl==0.7.2
 scipy==1.11.4
 prettytable==3.9.0
 pebble==5.0.6
+wandb==0.18.1
